@@ -1,11 +1,13 @@
-from sys import getsizeof
-from socket import socket
+import socket
 from struct import pack, unpack
+from sys import getsizeof
+from threading import Thread
+from typing import Tuple, Callable
 
 from server_package.config import INT_SIZE
 
 
-def send_msg(conn: socket, msg: str) -> None:
+def send_msg(conn: socket.socket, msg: str) -> None:
     raw_msg = msg.encode()
     msg_size = getsizeof(raw_msg)
 
@@ -14,7 +16,7 @@ def send_msg(conn: socket, msg: str) -> None:
     conn.sendall(packed_msg)
 
 
-def receive_msg(conn: socket) -> str:
+def receive_msg(conn: socket.socket) -> str:
     raw_msg_size = receive_all(conn, INT_SIZE)
     msg_size = unpack('>I', raw_msg_size)[0]
 
@@ -22,7 +24,7 @@ def receive_msg(conn: socket) -> str:
     return raw_msg.decode()
 
 
-def receive_all(conn: socket, n: int) -> bytes:
+def receive_all(conn: socket.socket, n: int) -> bytes:
     data = b''
     data_size = 0
     while data_size < n:
@@ -33,3 +35,9 @@ def receive_all(conn: socket, n: int) -> bytes:
         data += packet
         data_size = getsizeof(data)
     return data
+
+
+def run_daemon(target: Callable, args: Tuple) -> None:
+    thread = Thread(target=target, args=args)
+    thread.daemon = True
+    thread.start()
