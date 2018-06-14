@@ -37,7 +37,7 @@ def receive_all(conn: socket.socket, n: int) -> bytes:
     return data
 
 
-def run_daemon(target: Callable, args: Tuple) -> None:
+def run_daemon(target: Callable, args: Tuple = ()) -> None:
     thread = Thread(target=target, args=args)
     thread.daemon = True
     thread.start()

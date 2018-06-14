@@ -9,5 +9,6 @@ INT_SIZE = 4
 MAX_CONNECTIONS_AMOUNT = 10
 
 TASK_QUEUE_SIZE = 15
+WORKER_SLEEP_TIME = 2
 
 logging.basicConfig(level=logging.INFO)
