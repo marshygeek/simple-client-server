@@ -1,10 +1,15 @@
 import socket
 from struct import pack, unpack
-from sys import getsizeof
+from sys import getsizeof, path
+from os.path import dirname, abspath
 from threading import Thread
 from typing import Tuple, Callable
 
 from server_package.config import INT_SIZE
+
+# setting working directory
+work_dir = dirname(dirname(abspath(__file__)))
+path.append(work_dir)
 
 
 def send_msg(conn: socket.socket, msg: str) -> None:

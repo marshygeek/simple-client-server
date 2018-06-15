@@ -1,10 +1,9 @@
 from logging import info
-from time import sleep
 from json import loads, dumps
 
-from server_package.config import *
-from server_package.worker import Worker
 from utils import *
+from server_package.worker import Worker
+from server_package.config import *
 from structs import *
 
 
@@ -18,7 +17,7 @@ def start_server():
         info('binding complete')
     except socket.error as err:
         logging.error('unexpected error occurred while binding: {}'.format(err))
-        exit(1)
+        return
 
     sock.listen(MAX_CONNECTIONS_AMOUNT)
     info('socket is now listening')
@@ -44,6 +43,21 @@ def handle_request(conn: socket.socket):
     msg = receive_msg(conn)
     request = loads(msg)
 
+    if request['batch_mode']:
+        while True:
+            send_response(conn, request)
+
+            msg = receive_msg(conn)
+            request = loads(msg)
+            if 'stop' in request:
+                break
+    else:
+        send_response(conn, request)
+
+    conn.close()
+
+
+def send_response(conn: socket.socket, request: dict):
     response = {}
     if request['type'] == Request.CREATE_TASK:
         task = Task(request['argument'], request['command'])
@@ -77,8 +91,6 @@ def handle_request(conn: socket.socket):
 
     dumped_resp = dumps(response)
     send_msg(conn, dumped_resp)
-
-    conn.close()
 
 
 def find_task(task_id: str) -> dict:
