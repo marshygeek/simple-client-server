@@ -1,30 +1,29 @@
 import socket
 from json import loads, dumps
-from os.path import dirname, abspath
-from struct import pack, unpack
-from sys import getsizeof, path
+import struct
+from sys import getsizeof
 from threading import Thread
 from typing import Tuple, Callable
 
 from server_package.config import INT_SIZE
-
-# setting working directory
-work_dir = dirname(dirname(abspath(__file__)))
-path.append(work_dir)
 
 
 def send_msg(conn: socket.socket, msg: str) -> None:
     raw_msg = msg.encode()
     msg_size = getsizeof(raw_msg)
 
-    packed_msg = pack('>I', msg_size) + raw_msg
+    packed_msg = struct.pack('>I', msg_size) + raw_msg
 
     conn.sendall(packed_msg)
 
 
 def receive_msg(conn: socket.socket) -> str:
     raw_msg_size = receive_all(conn, INT_SIZE)
-    msg_size = unpack('>I', raw_msg_size)[0]
+
+    try:
+        msg_size = struct.unpack('>I', raw_msg_size)[0]
+    except struct.error:
+        return None
 
     raw_msg = receive_all(conn, msg_size)
     return raw_msg.decode()

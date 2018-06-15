@@ -28,7 +28,7 @@ def get_status(conn: socket.socket, args, batch_mode: bool = False) -> Status:
 
     request = {
         'type': args.type,
-        'id': args.task_id,
+        'task_id': args.task_id,
         'batch_mode': batch_mode,
     }
 
@@ -43,14 +43,17 @@ def get_status(conn: socket.socket, args, batch_mode: bool = False) -> Status:
     return status
 
 
-def get_result(conn: socket.socket, args, batch_mode: bool = False) -> str:
+def get_result(conn: socket.socket, args, batch_mode: bool = False, is_stop: bool = False) -> str:
     info('getting result, task_id: {}'.format(args.task_id))
 
     request = {
         'type': args.type,
-        'id': args.task_id,
+        'task_id': args.task_id,
         'batch_mode': batch_mode,
     }
+
+    if is_stop:
+        request['stop'] = True
 
     response = send_receive(conn, request)
 

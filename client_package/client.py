@@ -1,5 +1,11 @@
 from logging import info
 from time import sleep
+from sys import path
+from os.path import dirname, abspath
+
+# setting working directory
+work_dir = dirname(dirname(abspath(__file__)))
+path.append(work_dir)
 
 from utils import *
 from structs import *
@@ -64,16 +70,19 @@ def handle_batch_mode(conn: socket.socket, args):
 
     task_status = Status.IN_QUEUE
     args.type = Request.GET_STATUS
+    args.task_id = task_id
     while task_status != Status.COMPLETE:
         task_status = get_status(conn, args)
         if task_status is None:
             logging.error('closing batch request')
             return
 
+        info('\n')
+
         sleep(BATCH_SLEEP_TIME)
 
     args.type = Request.GET_RESULT
-    task_result = get_result(conn, args)
+    task_result = get_result(conn, args, is_stop=True)
     if task_result is None:
         logging.error('closing batch request')
         return

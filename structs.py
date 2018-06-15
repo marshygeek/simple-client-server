@@ -1,6 +1,6 @@
 from threading import Lock
 
-from enum import Enum
+from enum import IntEnum
 from uuid import uuid4
 
 
@@ -27,19 +27,19 @@ class SafeDict:
                 del self._dict[key]
 
 
-class Status(Enum):
+class Status(IntEnum):
     IN_QUEUE = 1
     PROCESSING = 2
     COMPLETE = 3
 
 
-class Request(Enum):
+class Request(IntEnum):
     CREATE_TASK = 1
     GET_STATUS = 2
     GET_RESULT = 3
 
 
-class Command(Enum):
+class Command(IntEnum):
     REVERSE = 1
     PERMUTE = 2
 
