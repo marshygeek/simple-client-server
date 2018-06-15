@@ -17,6 +17,10 @@ class SafeDict:
         with self._lock:
             return self._dict[key]
 
+    def is_present(self, key):
+        with self._lock:
+            return key in self._dict
+
     def remove(self, key):
         with self._lock:
             if key in self._dict:
@@ -24,9 +28,15 @@ class SafeDict:
 
 
 class Status(Enum):
-    IN_QUEUE = 'in_queue'
-    PROCESSING = 'processing'
-    COMPLETE = 'complete'
+    IN_QUEUE = 1
+    PROCESSING = 2
+    COMPLETE = 3
+
+
+class Request(Enum):
+    CREATE_TASK = 1
+    GET_STATUS = 2
+    GET_RESULT = 3
 
 
 class Command(Enum):
@@ -36,7 +46,7 @@ class Command(Enum):
 
 class Task:
     def __init__(self, argument: str, command: Command) -> None:
-        self.id = uuid4()
+        self.id = str(uuid4())
         self.argument = argument
         self.command = command
 

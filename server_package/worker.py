@@ -2,8 +2,8 @@ from queue import Queue
 from time import sleep
 
 from server_package.config import TASK_QUEUE_SIZE, WORKER_SLEEP_TIME
-from server_package.utils import run_daemon
-from server_package.structs import *
+from structs import *
+from utils import run_daemon
 
 
 class Worker:
@@ -14,9 +14,12 @@ class Worker:
     def start(self):
         run_daemon(self._process_tasks)
 
-    def push_task(self, task: Task):
-        self.results.put(task.id, Result())
-        self.queue.put(task)
+    def push_task(self, task: Task) -> bool:
+        if not self.queue.full():
+            self.results.put(task.id, Result())
+            self.queue.put(task)
+            return True
+        return False
 
     def _process_tasks(self):
         while True:
