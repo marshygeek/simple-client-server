@@ -12,7 +12,7 @@ from server_package.worker import Worker
 from server_package.config import *
 
 
-def start_server():
+def start_server(worker: Worker):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     info('socket created')
@@ -34,7 +34,7 @@ def start_server():
         conn, address = sock.accept()
         info('accepting connection from {}:{}'.format(*address))
         try:
-            run_daemon(handle_request, (conn,))
+            run_daemon(handle_request, (conn, worker))
         except KeyboardInterrupt:
             break
         except Exception as err:
@@ -44,26 +44,26 @@ def start_server():
     info('socket closed')
 
 
-def handle_request(conn: socket.socket):
+def handle_request(conn: socket.socket, worker: Worker):
     msg = receive_msg(conn)
     request = loads(msg)
 
     if request['batch_mode']:
         while True:
-            send_response(conn, request)
+            send_response(conn, worker, request)
 
             msg = receive_msg(conn)
-            if msg == '' or 'stop' in request:
+            if msg is None or 'stop' in request:
                 break
 
             request = loads(msg)
     else:
-        send_response(conn, request)
+        send_response(conn, worker, request)
 
     conn.close()
 
 
-def send_response(conn: socket.socket, request: dict):
+def send_response(conn: socket.socket, worker: Worker, request: dict):
     response = {}
     if request['type'] == Request.CREATE_TASK:
         task = Task(request['argument'], request['command'])
@@ -77,14 +77,14 @@ def send_response(conn: socket.socket, request: dict):
             response['msg'] = 'task queue is full, try again later'
     elif request['type'] == Request.GET_STATUS:
         task_id = request['task_id']
-        response = find_task(task_id)
+        response = find_task(worker, task_id)
 
         if response['success']:
             result = worker.results.get(task_id)
             response['status'] = result.status
     else:
         task_id = request['task_id']
-        response = find_task(task_id)
+        response = find_task(worker, task_id)
 
         if response['success']:
             result = worker.results.get(task_id)
@@ -101,7 +101,7 @@ def send_response(conn: socket.socket, request: dict):
     send_msg(conn, dumped_resp)
 
 
-def find_task(task_id: str) -> dict:
+def find_task(worker: Worker, task_id: str) -> dict:
     is_present = worker.results.is_present(task_id)
 
     response = {}
@@ -115,5 +115,5 @@ def find_task(task_id: str) -> dict:
 
 
 if __name__ == '__main__':
-    worker = Worker()
-    start_server()
+    init_worker = Worker()
+    start_server(init_worker)
