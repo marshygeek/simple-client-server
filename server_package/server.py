@@ -1,9 +1,15 @@
 from logging import info
+from sys import path
+from os.path import dirname, abspath
+
+# setting working directory
+work_dir = dirname(dirname(abspath(__file__)))
+path.append(work_dir)
 
 from utils import *
+from structs import *
 from server_package.worker import Worker
 from server_package.config import *
-from structs import *
 
 
 def start_server():
@@ -47,9 +53,10 @@ def handle_request(conn: socket.socket):
             send_response(conn, request)
 
             msg = receive_msg(conn)
-            request = loads(msg)
-            if 'stop' in request:
+            if msg == '' or 'stop' in request:
                 break
+
+            request = loads(msg)
     else:
         send_response(conn, request)
 
@@ -64,19 +71,19 @@ def send_response(conn: socket.socket, request: dict):
 
         if is_pushed:
             response['success'] = True
-            response['id'] = task.id
+            response['task_id'] = task.id
         else:
             response['success'] = False
             response['msg'] = 'task queue is full, try again later'
     elif request['type'] == Request.GET_STATUS:
-        task_id = request['id']
+        task_id = request['task_id']
         response = find_task(task_id)
 
         if response['success']:
             result = worker.results.get(task_id)
             response['status'] = result.status
     else:
-        task_id = request['id']
+        task_id = request['task_id']
         response = find_task(task_id)
 
         if response['success']:
@@ -84,6 +91,8 @@ def send_response(conn: socket.socket, request: dict):
 
             if result.status == Status.COMPLETE:
                 response['result'] = result.value
+
+                worker.results.remove(task_id)
             else:
                 response['success'] = False
                 response['msg'] = 'task is not complete yet'
