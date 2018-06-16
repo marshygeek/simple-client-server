@@ -1,6 +1,7 @@
 import socket
-from json import loads, dumps
 import struct
+import string
+from json import loads, dumps
 from sys import getsizeof
 from threading import Thread
 from typing import Tuple, Callable
@@ -54,3 +55,7 @@ def send_receive(conn: socket.socket, request: dict) -> dict:
 
     msg = receive_msg(conn)
     return loads(msg)
+
+
+def get_clean_task_id(task_id: str) -> str:
+    return ''.join(filter(lambda char: char in string.printable, task_id))

@@ -65,6 +65,10 @@ def handle_request(conn: socket.socket, worker: Worker):
 
 def send_response(conn: socket.socket, worker: Worker, request: dict):
     response = {}
+
+    if request['type'] != Request.CREATE_TASK:
+        request['task_id'] = get_clean_task_id(request['task_id'])
+
     if request['type'] == Request.CREATE_TASK:
         task = Task(request['argument'], request['command'])
         is_pushed = worker.push_task(task)
@@ -117,3 +121,4 @@ def find_task(worker: Worker, task_id: str) -> dict:
 if __name__ == '__main__':
     init_worker = Worker()
     start_server(init_worker)
+
