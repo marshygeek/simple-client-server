@@ -84,19 +84,19 @@ def send_response(conn: socket.socket, worker: Worker, request: dict):
         response = find_task(worker, task_id)
 
         if response['success']:
-            result = worker.results.get(task_id)
+            result = worker.get_result(task_id)
             response['status'] = result.status
     else:
         task_id = request['task_id']
         response = find_task(worker, task_id)
 
         if response['success']:
-            result = worker.results.get(task_id)
+            result = worker.get_result(task_id)
 
             if result.status == Status.COMPLETE:
                 response['result'] = result.value
 
-                worker.results.remove(task_id)
+                worker.remove_result(task_id)
             else:
                 response['success'] = False
                 response['msg'] = 'task is not complete yet'
@@ -106,7 +106,7 @@ def send_response(conn: socket.socket, worker: Worker, request: dict):
 
 
 def find_task(worker: Worker, task_id: str) -> dict:
-    is_present = worker.results.is_present(task_id)
+    is_present = worker.is_present(task_id)
 
     response = {}
     if is_present:
@@ -121,4 +121,3 @@ def find_task(worker: Worker, task_id: str) -> dict:
 if __name__ == '__main__':
     init_worker = Worker()
     start_server(init_worker)
-

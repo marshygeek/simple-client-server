@@ -1,5 +1,5 @@
-from sys import path
 from os.path import dirname, abspath
+from sys import path
 from time import sleep
 
 # setting working directory
@@ -9,9 +9,9 @@ path.append(work_dir)
 from client_package.config import *
 from client_package.requests import *
 from server_package.server import start_server
-from server_package.config import TASK_QUEUE_SIZE, WORKER_SLEEP_TIME
+from server_package.config import WORKER_SLEEP_TIME
 from server_package.worker import Worker
-from structs import Command, Request, Task
+from structs import Command, Request
 
 
 class Namespace:

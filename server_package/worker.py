@@ -8,27 +8,20 @@ from utils import run_daemon
 
 class Worker:
     def __init__(self, queue_size=TASK_QUEUE_SIZE, use_fake_process=True) -> None:
-        self.queue = Queue(queue_size)
-        self.results = SafeDict()
+        self._queue = Queue(queue_size)
+        self._results = SafeDict()
 
-        self.use_fake_process = use_fake_process
+        self._use_fake_process = use_fake_process
 
     def start(self):
         run_daemon(self._process_tasks)
 
-    def push_task(self, task: Task) -> bool:
-        if not self.queue.full():
-            self.results.put(task.id, Result())
-            self.queue.put(task)
-            return True
-        return False
-
     def _process_tasks(self):
         while True:
-            if not self.queue.empty():
-                task = self.queue.get()  # type: Task
+            if not self._queue.empty():
+                task = self._queue.get()  # type: Task
 
-                result = self.results.get(task.id)  # type: Result
+                result = self._results.get(task.id)  # type: Result
                 result.status = Status.PROCESSING
 
                 value = self._process_task(task)
@@ -40,7 +33,7 @@ class Worker:
         if task.command == Command.REVERSE:
             result = task.argument[::-1]
 
-            if self.use_fake_process:
+            if self._use_fake_process:
                 sleep(3)
         else:
             arg = list(task.argument)
@@ -49,6 +42,22 @@ class Worker:
 
             result = ''.join(arg)
 
-            if self.use_fake_process:
+            if self._use_fake_process:
                 sleep(7)
         return result
+
+    def push_task(self, task: Task) -> bool:
+        if not self._queue.full():
+            self._results.put(task.id, Result())
+            self._queue.put(task)
+            return True
+        return False
+
+    def is_present(self, task_id: str) -> bool:
+        return self._results.is_present(task_id)
+
+    def get_result(self, task_id: str) -> Result:
+        return self._results.get(task_id)
+
+    def remove_result(self, task_id: str) -> None:
+        self._results.remove(task_id)
